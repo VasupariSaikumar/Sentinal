@@ -5,10 +5,11 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "cameras")
 data class CameraEntity(
-    @PrimaryKey(autoGenerate = true) val id : Int,
-    val ipAddress :String ,
-    val port : Int,
-    val username:String,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val name: String,
+    val ipAddress: String,
+    val port: Int?,
+    val username: String,
     val password: String
 )
 //So CameraEntity describes what one camera looks like in storage.
