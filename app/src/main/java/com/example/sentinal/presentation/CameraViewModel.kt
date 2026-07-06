@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sentinal.SentinalApp
 import com.example.sentinal.data.CameraEntity
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -30,5 +31,8 @@ class CameraViewModel(application: Application): AndroidViewModel(application) {
         viewModelScope.launch {
             repository.deleteCamera(camera)
         }
+    }
+    fun getCameraById(id:Int): Flow<CameraEntity?> {
+        return repository.getCameraById(id)
     }
 }

@@ -1,5 +1,6 @@
 package com.example.sentinal.data
 
+import android.graphics.Camera
 import kotlinx.coroutines.flow.Flow
 
 class CameraRepository(private val dao : CameraDao) {
@@ -10,6 +11,9 @@ class CameraRepository(private val dao : CameraDao) {
     }
     suspend fun deleteCamera(camera: CameraEntity) {
         dao.deleteCamera(camera)
+    }
+    fun getCameraById(id: Int): Flow<CameraEntity?>{
+        return dao.getCameraById(id)
     }
 }
 /*

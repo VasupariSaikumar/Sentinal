@@ -16,4 +16,7 @@ interface CameraDao{
     //Flow means it automatically updates the UI when data updates/changes
     @Delete
     suspend fun deleteCamera(camera: CameraEntity)
+
+    @Query("SELECT * FROM cameras WHERE  id = :cameraId")
+    fun getCameraById(cameraId: Int): Flow<CameraEntity?>
 }

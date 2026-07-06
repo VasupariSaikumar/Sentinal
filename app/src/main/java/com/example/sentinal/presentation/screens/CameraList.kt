@@ -31,7 +31,7 @@ import com.example.sentinal.presentation.CameraViewModel
 fun CameraList(
     viewModel: CameraViewModel,
     onAddCamera : () -> Unit,
-   // onDeleteCamera : () -> Unit
+    onCameraClick: (CameraEntity) -> Unit
 ) {
     val cameras by viewModel.allCameras.collectAsState()
     Scaffold(
@@ -61,16 +61,21 @@ fun CameraList(
                     .padding(paddingValues)
             ) {
                 items(cameras){camera ->
-                    CameraCard(camera = camera)
+                    CameraCard(camera = camera,
+                        onCameraClick = {clickedCamera ->
+                            onCameraClick(clickedCamera)
+                        })
                 }
             }
         }
     }
 }
 @Composable
-fun CameraCard(camera: CameraEntity){
+fun CameraCard(camera: CameraEntity,
+               onCameraClick : (CameraEntity) -> Unit){
     Card(modifier = Modifier.fillMaxWidth()
-        .padding(horizontal = 16.dp , vertical = 8.dp)) {
+        .padding(horizontal = 16.dp , vertical = 8.dp),
+        onClick = {onCameraClick(camera)}) {
         Column(modifier = Modifier.padding(16.dp))
         {
             Text(camera.name ,style = MaterialTheme.typography.titleMedium )
