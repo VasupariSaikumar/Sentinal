@@ -1,5 +1,7 @@
 package com.example.sentinal.presentation.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -64,11 +67,46 @@ fun CameraList(
                 modifier = Modifier.fillMaxSize()
                     .padding(paddingValues)
             ) {
-                items(cameras){camera ->
-                    CameraCard(camera = camera,
-                        onCameraClick = {clickedCamera ->
-                            onCameraClick(clickedCamera)
-                        })
+                items(cameras, key = { it.id }) { camera ->
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { value ->
+                            if (value == SwipeToDismissBoxValue.EndToStart) {
+                                viewModel.deleteCamera(camera)
+                                true
+                            } else false
+                        }
+                    )
+
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        enableDismissFromStartToEnd = false,
+                        backgroundContent = {
+                            val color by animateColorAsState(
+                                when (dismissState.targetValue) {
+                                    SwipeToDismissBoxValue.EndToStart -> Color.Red
+                                    else -> Color.Transparent
+                                }, label = "dismissBackground"
+                            )
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                    ) {
+                        CameraCard(camera = camera,
+                            onCameraClick = { clickedCamera ->
+                                onCameraClick(clickedCamera)
+                            })
+                    }
                 }
             }
         }
