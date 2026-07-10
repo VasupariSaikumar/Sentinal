@@ -47,13 +47,29 @@ fun LiveStreamScreen(
     camera: CameraEntity,
     onNavigationBack : () -> Unit
 ){
-    val context = LocalContext.current // i know about context it just know the current condition of the app but y we need in this file
+    val context = LocalContext.current
 
-  //  val rtspUrl = "rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mp4"
-  //  val rtspUrl = "rtsp://${camera.username}:${camera.password}"+"@${camera.ipAddress}:${camera.port}/stream1"
-//  To Test on real camera
-    val rtspUrl = "rtsp://${camera.ipAddress}:${camera.port}/h264_ulaw.sdp"
-        // To test on mobile camera
+    val rtspUrl = remember(camera) {
+        // Remove any existing protocol prefixes if the user added them
+        val cleanIp = camera.ipAddress
+            .replace("rtsp://", "")
+            .replace("http://", "")
+            .split("/") // Take only the host/port part if there's a path
+            .first()
+            .trim()
+
+        val auth = if (camera.username.isNotBlank() && camera.password.isNotBlank()) {
+            "${camera.username}:${camera.password}@"
+        } else ""
+
+        val portSuffix = if (camera.port != null && camera.port != 0) ":${camera.port}" else ""
+        
+        // Construct the full RTSP URL
+        "rtsp://$auth$cleanIp$portSuffix/h264_ulaw.sdp".also {
+            Log.d("LiveStreamScreen", "Constructed RTSP URL: $it")
+        }
+    }
+
     var isPlaying by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -80,11 +96,12 @@ fun LiveStreamScreen(
             })
         }
     }
-    var surfaceView by remember { mutableStateOf<SurfaceView?>(null) } // Holds reference to the SurfaceView once created
-    val motionDetector = remember { MotionDetector() } //Motion detector instance - survives recomposition
-    var motionDetected by remember { mutableStateOf(false) } // Track motion state to show on screen
 
-    //Capture loop
+    var surfaceView by remember { mutableStateOf<SurfaceView?>(null) }
+    val motionDetector = remember { MotionDetector() }
+    var motionDetected by remember { mutableStateOf(false) }
+
+    //Capture loop for motion detection
     LaunchedEffect(surfaceView, isPlaying) {
         while (true) {
             delay(2000)
@@ -96,7 +113,6 @@ fun LiveStreamScreen(
                         view.width, view.height, Bitmap.Config.ARGB_8888
                     )
 
-                    // PixelCopy needs a Handler to run on
                     val handler = Handler(Looper.getMainLooper())
 
                     PixelCopy.request(view, bitmap, { result ->
@@ -121,28 +137,32 @@ fun LiveStreamScreen(
             }
         }
     }
+
     DisposableEffect(Unit) {
         onDispose {
             exoPlayer.release()
         }
     }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        //BackButton
-        Button(onClick =
-            onNavigationBack, modifier = Modifier.padding(8.dp)
+        Button(
+            onClick = onNavigationBack, 
+            modifier = Modifier.padding(8.dp)
         ) {
             Text("<-Back")
         }
-        //CameraName
+
         Text(
             text = camera.name ,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = 16.dp )
         )
+
         Text(
             text = if (motionDetected)" 🔴Motion Detected!" else "🟢 no Motion",
             modifier = Modifier.padding(horizontal = 16.dp)
         )
+
         errorMessage?.let {
             Text(
                 text = it,
@@ -150,6 +170,7 @@ fun LiveStreamScreen(
                 modifier = Modifier.padding(16.dp)
             )
         }
+
         AndroidView(
             factory = {ctx ->
                 val playerView = LayoutInflater.from(ctx)
@@ -158,7 +179,6 @@ fun LiveStreamScreen(
                     player = exoPlayer
                     useController = true
                 }.also {
-                    //capture surface view reference once created
                     surfaceView = it.videoSurfaceView as? SurfaceView
                 }
             },
